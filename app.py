@@ -1,8 +1,6 @@
-from flask import Flask, redirect, render_template, request, abort, make_response, jsonify, send_file, send_from_directory
-import requests
-import os, urllib
+from flask import Flask, redirect, render_template
+import requests, os, urllib
 from flask_bootstrap import Bootstrap5
-
 
 app = Flask(__name__)
 bootstrap = Bootstrap5(app)
