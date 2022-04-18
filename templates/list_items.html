@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+
+
+  {% block head %}
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  {% block styles %}
+  {{ bootstrap.load_css() }}
+  <style>
+    .photos {
+      padding-bottom: 20px
+    }
+
+    .item {
+      padding-bottom: 30px
+    }
+  </style>
+  {% endblock %}
+
+  <title>Your page title</title>
+  {% endblock %}
+
+<body>
+
+
+  {% block content %}
+  <div class="container">
+    <div class="row row-cols-4 photos">
+      {% for i in list %}
+      <div class=" col item">
+        <a href="#">
+          <img class="border w-100" src="{{i.thumbnail}}" alt="{{i.name}}">
+        </a>
+      </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endblock %}
+    {% block scripts %}
+    {{ bootstrap.load_js() }}
+    {% endblock %}
+</body>
+
+</html>

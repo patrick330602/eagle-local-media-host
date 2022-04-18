@@ -1,0 +1,10 @@
+<html>
+  <head>
+    <title>Eagle.cool</title>
+  </head>
+  <body>
+      {% for item in list %}
+        <p><a href="{{ '/folders/' + item.id }}">{{ item.name }}</a></p>
+      {% endfor %}
+  </body>
+</html>
