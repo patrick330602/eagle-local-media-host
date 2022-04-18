@@ -1,10 +1,26 @@
-<html>
-  <head>
-    <title>Eagle.cool</title>
-  </head>
-  <body>
+<!doctype html>
+<html lang="en">
+{% block head %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% block styles %}
+{{ bootstrap.load_css() }}
+{% endblock %}
+
+<title>Eagle.cool Server</title>
+{% endblock %}
+
+<body>
+  {% block content %}
+  <div class="container">
+    <h1>Eagle.cool Server</h1>
+    {% block nav %}
       {% for item in list %}
-        <p><a href="{{ '/folders/' + item.id }}">{{ item.name }}</a></p>
+      <a href="{{ '/folders/' + item.id }}">{{ item.name }}</a><br/>
       {% endfor %}
-  </body>
+    {% endblock %}
+  </div>
+  {% endblock %}
+</body>
+
 </html>
