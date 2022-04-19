@@ -89,7 +89,7 @@ def get_images(include=None, exclude=[]):
 @app.route('/folders/<id>')
 def list_items(id):
     try:
-        folders, title = get_folders_and_name(id)
+        folders, title = get_folders_and_name(id, [])
         exclude_ids = []
         if folders != []:
             exclude_ids = [x['id'] for x in folders]
