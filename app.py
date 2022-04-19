@@ -1,3 +1,4 @@
+import traceback
 from flask import Flask, redirect, render_template
 import requests, os, urllib
 from flask_bootstrap import Bootstrap4
@@ -7,6 +8,11 @@ bootstrap = Bootstrap4(app)
 
 
 BASE_URL = "http://localhost:41595"
+LIST_LIMIT = 10000
+
+def call_api(params):
+    r = requests.get(BASE_URL + params, {redirect: 'follow'})
+    return r.json()
 
 def get_media_paths(id, ext):
     ri = requests.get(BASE_URL + "/api/item/thumbnail?id=" + id, {redirect: 'follow'})
@@ -33,28 +39,73 @@ def get_media_paths(id, ext):
     os.symlink(raw_full_path, raw_path)
     return "/" + thumbnail_path, "/" + raw_path
 
-@app.route('/folders/<item>')
-def list_items(item):
-    data = requests.get(BASE_URL + "/api/library/info", {redirect: 'follow'}).json()
-    name = [x['name'] for x in data['data']['folders'] if x['id'] == item][-1]
-    r = requests.get(BASE_URL + "/api/item/list?limit=10000&folders=" + item, {redirect: 'follow'})
-    data = r.json()
-    list = []
-    c = 0
-    for x in data['data']:
-        if x['ext'] in ('jpg', 'png', 'gif'):
-            thumbnail, full_image = get_media_paths(x['id'], x['ext'])
-            list.append({'name': x['name'], 'thumbnail': thumbnail, 'image': full_image, 'count': c})
-            c+= 1
+def get_folders_and_name(id=None, parents=[]):
+    data = call_api("/api/library/info")
+    if id is None:
+        return [{'name': x['name'], 'id': x['id']} for x in data['data']['folders']], None
+    else:
+        core_data = data['data']['folders']
+        for x in parents:
+            for s in core_data:
+                if s['id'] == x:
+                    core_data = s['children']
+                    break
+        final_folders = []
+        final_name = None
+        for x in core_data:
+            if x['children'] != []:
+                parents.append(x['id'])
+                final_folders, final_name = get_folders_and_name(id, parents)
+                if final_name is not None:
+                    break
+            if x['id'] == id:
+                final_name = x['name']
+                final_folders = [{'name': x['name'], 'id': x['id']} for x in x['children']]
+                break
+            
+        return final_folders, final_name
     
-    return render_template('list_items.html', title=name, list=list)
+def get_images(include=None, exclude=[]):
+    api_addr = "/api/item/list?limit={}".format(LIST_LIMIT)
+    if include is not None:
+        api_addr += "&folders={}".format(include)
+    data = call_api(api_addr)
+    images = []
+    c = 0
+    
+    for x in data['data']:
+        check = x['ext'] in ('jpg', 'png', 'gif') 
+        if include is None:
+            check = check and x['folders'] == []
+        elif exclude != []:
+            for e in exclude:
+                check = check and e not in x['folders']
+        if check:
+            thumbnail, full_image = get_media_paths(x['id'], x['ext'])
+            images.append({'name': x['name'], 'thumbnail': thumbnail, 'image': full_image, 'count': c})
+            c+= 1
+    return images
+
+@app.route('/folders/<id>')
+def list_items(id):
+    try:
+        folders, title = get_folders_and_name(id)
+        exclude_ids = []
+        if folders != []:
+            exclude_ids = [x['id'] for x in folders]
+        images = get_images(id, exclude_ids)
+        return render_template('list_items.html', title=title, folders=folders, images=images)
+    except Exception:
+        return render_template('error.html', error=traceback.format_exc())
 
 @app.route('/', methods=['GET'])
 def show_main():
-    r = requests.get(BASE_URL + "/api/library/info", {redirect: 'follow'})
-    data = r.json()
-    nni = [{'name': x['name'], 'id': x['id']} for x in data['data']['folders']]
-    return render_template('index.html', list=nni)
+    try:
+        folders, _ = get_folders_and_name()
+        images = get_images()
+        return render_template('list_items.html', folders=folders, images=images)
+    except Exception:
+        return render_template('error.html', error=traceback.format_exc())
 
 
 if __name__ == '__main__':

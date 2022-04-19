@@ -93,15 +93,30 @@
   }
 </style>
 {% endblock %}
-
+{% if title %}
 <title>Folder: {{title}} - Eagle.cool Server</title>
+{% else %}
+<title>Eagle.cool Server</title>
+{% endif %}
 {% endblock %}
 
 {% block content %}
 <div class="container">
-  <h1>{{title}}</h1>
+  <h1>Eagle.cool Server</h1>
+  {% if title %}
+  <h2>{{title}}</h2>
+  {% endif %}
+
+
+  {% block nav %}
+    {% for item in folders %}
+    <a href="{{ '/folders/' + item.id }}">{{ item.name }}</a> |
+    {% endfor %}
+  {% endblock %}
+
+
   <div class="row row-cols-4 photos" id="gallery" data-toggle="modal" data-target="#MainModal">
-    {% for i in list %}
+    {% for i in images %}
     <div class="col-12 col-sm-6 col-lg-3 item">
       <img class="border w-100" src="{{i.thumbnail}}" alt="{{i.name}}" data-target="#image-full"
         data-slide-to="{{i.count}}">
@@ -119,7 +134,7 @@
         <div class="modal-body">
           <div id="image-full" class="carousel slide" data-ride="carousel" data-interval="false">
             <div class="carousel-inner">
-              {% for i in list %}
+              {% for i in images %}
               {% if i.count == 0 %}
               <div class="carousel-item active">
               {% else %}
