@@ -5,93 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 {% block styles %}
 {{ bootstrap.load_css() }}
-<style>
-  .photos {
-    padding-bottom: 20px
-  }
-
-  .item {
-    padding-bottom: 30px
-  }
-
-  .modal-dialog {
-    max-width: unset !important;
-    margin: 1.75rem auto;
-  }
-
-  .modal-content {
-    background-color: unset !important;
-    border: 0 !important;
-  }
-
-  .modal-header {
-    border: 0 !important;
-  }
-
-  .modal-body {
-    max-width: 800px !important;
-    padding: 0 !important;
-    margin: 1.75rem auto;
-  }
-
-  .close {
-    color: #ddd !important;
-    text-shadow: 0 1px 0 #000 !important;
-  }
-
-  .close:hover {
-    color: #fff !important;
-    text-decoration: none !important;
-  }
-
-  /* The slider */
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-
-  input:checked+.slider {
-    background-color: #2196F3;
-  }
-
-  input:focus+.slider {
-    box-shadow: 0 0 1px #2196F3;
-  }
-
-  input:checked+.slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-  }
-
-  /* Rounded sliders */
-  .slider.round {
-    border-radius: 34px;
-  }
-
-  .slider.round:before {
-    border-radius: 50%;
-  }
-</style>
+<link rel="stylesheet" href="/static/style.css">
 {% endblock %}
 
 <title>Error - Eagle.cool Server</title>
@@ -101,7 +15,8 @@
 <div class="container">
   <h1>Eagle.cool Server Error</h1>
     <p> Unable to connect to Eagle Server or something wrong in the backend. Please make sure your Eagle application is opened.</p>
-    <p>Details: </p>
+    <p><b>Keep in Mind:</b> Eagle API is really unstable, things like encountering errors are really frequent. </p>
+    <p><b>Details: </b></p>
     <pre>
 {{error}}
 </pre>
