@@ -26,7 +26,7 @@
     {% for item in folders %}
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="folder border">
-        <a href="{{ '/folders/' + item.id }}">
+        <a href="/folders/{{ item.id }}/page/1">
           <img class="icon" src="/static/folder.png" alt="{{item.name}}"><span>{{ item.name }}</span>
         </a>
       </div>
@@ -38,11 +38,19 @@
   <div class="row row-cols-4 photos" id="gallery" data-toggle="modal" data-target="#MainModal">
     {% for i in images %}
     <div class="col-12 col-sm-6 col-lg-3 item">
-      <img class="border w-100" src="{{i.thumbnail}}" alt="{{i.name}}" data-target="#image-full"
+      <img class="border w-100" src="/resources?id={{i.id}}&ext={{i.ext}}&type=thumbnail" alt="{{i.name}}" data-target="#image-full"
         data-slide-to="{{i.count}}">
     </div>
     {% endfor %}
   </div>
+
+  <nav aria-label="Page navigation">
+    <ul class="pagination">
+      {{ pagination|safe }}
+    </ul>
+  </nav>
+
+
   <div class="modal fade" id="MainModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -60,7 +68,7 @@
               {% else %}
               <div class="carousel-item">
               {% endif %}
-                <img class="d-block w-100" src="{{i.image}}" alt="{{i.name}}">
+                <img class="d-block w-100" src="/resources?id={{i.id}}&ext={{i.ext}}&type=full" alt="{{i.name}}">
               </div>
               {% endfor %}
             </div>

@@ -5,11 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Start Server",
+            "name": "Python: Flask",
             "type": "python",
             "request": "launch",
-            "program": "app.py",
-            "console": "integratedTerminal",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "app.py",
+                "FLASK_ENV": "development"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--host=0.0.0.0",
+                "--port=4674"
+            ],
+            "jinja": true,
             "justMyCode": true
         }
     ]
