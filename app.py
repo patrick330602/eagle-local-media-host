@@ -103,6 +103,8 @@ def get_images(include=None, exclude=[]):
 def counter_calc(page, len):
     p = int(page)
     total = len
+    if len == 0:
+        return  {'page': 0, 'min': 0, 'max': 0, 'total': 0}
     len = len // PAGE_LIMIT + 1
     if p > len:
         raise Exception("Page does not exist")
@@ -115,6 +117,8 @@ def counter_calc(page, len):
 
 def generate_pagination_to_html_from_counter(counter, base=""):
     html = ""
+    if counter['page'] == 0:
+        return html
     if counter['page'] == 1:
         html += "<li class=\"page-item disabled\"><a class=\"page-link\">Previous</a></li>"
     else:
