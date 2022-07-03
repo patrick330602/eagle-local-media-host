@@ -21,6 +21,18 @@
   <h2>{{title}}</h2>
   {% endif %}
 
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      {% for item in parents %}
+      <li class="breadcrumb-item"><a href="/folders/{{ item.id }}/page/1">{{ item.name }}</a></li>
+      {% endfor %}
+      {% if title %}
+      <li class="breadcrumb-item active" aria-current="page">{{title}}</li>
+      {% endif %}
+    </ol>
+  </nav>
+
 
   <div class="row row-cols-4 folders">
     {% for item in folders %}

@@ -1,5 +1,6 @@
 import json
 import traceback
+from unicodedata import name
 from flask import Flask, redirect, render_template, url_for, request
 import requests, os, urllib
 from flask_bootstrap import Bootstrap4
@@ -41,31 +42,41 @@ def get_media_paths(id, ext):
     return "/" + thumbnail_path, "/" + raw_path
 
 def get_folders_and_name(id=None, parents=[]):
-    print("Getting folders and name with id: {} and parents: {}".format(id, parents))
     data = call_api("/api/library/info")
+    with open("static/cache/folders.json", "w") as f:
+        f.write(json.dumps(data['data']))
     if id is None:
         return [{'name': x['name'], 'id': x['id']} for x in data['data']['folders']], None
     else:
         core_data = data['data']['folders']
         for x in parents:
             for s in core_data:
-                if s['id'] == x:
+                if s['id'] == x['id']:
+                    print("Core Data Set to{} with name {}".format(s['id'], s['name']))
                     core_data = s['children']
                     break
         final_folders = []
         final_name = None
+        actual_parents = {}
         for x in core_data:
+            print("Checking {} with name {}".format(x['id'], x['name']))
             if x['children'] != []:
-                parents.append(x['id'])
-                final_folders, final_name = get_folders_and_name(id, parents)
+                print("Found children for {}".format(x['id']))
+                parents.append({'id': x['id'], 'name': x['name']})
+                final_folders, final_name, actual_parents = get_folders_and_name(id, parents)
                 if final_name is not None:
                     break
+                else:
+                    parents.pop()
             if x['id'] == id:
+                print("Found id: {}".format(x['name']))
                 final_name = x['name']
                 final_folders = [{'name': x['name'], 'id': x['id']} for x in x['children']]
+                actual_parents = parents
                 break
-            
-        return final_folders, final_name
+        print("Final folders: {}".format(final_folders))
+        print("Final name: {}".format(final_name))
+        return final_folders, final_name, actual_parents
     
 def get_images(include=None, exclude=[]):
     cache_name = "static/cache/root"
@@ -164,7 +175,8 @@ def resources():
 @app.route('/folders/<id>/page/<p>', methods=['GET'])
 def list_items(id, p):
     try:
-        folders, title = get_folders_and_name(id, [])
+        folders, title, actual_parents = get_folders_and_name(id, [])
+        print(actual_parents)
         exclude_ids = []
         if folders != []:
             exclude_ids = [x['id'] for x in folders]
@@ -172,7 +184,7 @@ def list_items(id, p):
         counter = counter_calc(p, len)
         limited_images = images[counter['min']:counter['max']]
         pagination = generate_pagination_to_html_from_counter(counter, "/folders/{}".format(id))
-        return render_template('list_items.html', title=title, folders=folders, images=limited_images, counter=counter, pagination=pagination)
+        return render_template('list_items.html', title=title, folders=folders, images=limited_images, counter=counter, pagination=pagination, parents=actual_parents)
     except Exception:
         return render_template('error.html', error=traceback.format_exc())
 
