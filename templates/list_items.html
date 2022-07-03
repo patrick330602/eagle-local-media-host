@@ -8,7 +8,14 @@
 <link rel="stylesheet" href="/static/style.css">
 {% endblock %}
 {% if title %}
-<title>Folder: {{title}} - Eagle.cool Server</title>
+<title>Home
+  {% for item in parents %}
+  / {{ item.name }}
+  {% endfor %}
+  {% if title %}
+  / {{title}}
+  {% endif %}
+  - Eagle.cool Server</title>
 {% else %}
 <title>Eagle.cool Server</title>
 {% endif %}
@@ -17,9 +24,6 @@
 {% block content %}
 <div class="container">
   <h1>Eagle.cool Server</h1>
-  {% if title %}
-  <h2>{{title}}</h2>
-  {% endif %}
 
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">

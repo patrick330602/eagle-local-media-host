@@ -49,6 +49,7 @@ def get_media_paths(id, ext):
 
 def get_folders_and_name(id=None, parents=[]):
     data = call_api("/api/library/info")
+    os.makedirs('static/cache/', exist_ok=True)
     with open("static/cache/folders.json", "w") as f:
         f.write(json.dumps(data['data']))
     if id is None:
