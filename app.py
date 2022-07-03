@@ -1,8 +1,10 @@
 import json
+import os
 import traceback
-from unicodedata import name
-from flask import Flask, redirect, render_template, url_for, request
-import requests, os, urllib
+import urllib
+
+import requests
+from flask import Flask, redirect, render_template, request, url_for
 from flask_bootstrap import Bootstrap4
 
 app = Flask(__name__)
@@ -10,15 +12,18 @@ bootstrap = Bootstrap4(app)
 
 
 BASE_URL = "http://localhost:41595"
-LIST_LIMIT = 10000
+LIST_LIMIT = 1000000
 PAGE_LIMIT = 20
+
 
 def call_api(params):
     r = requests.get(BASE_URL + params, {redirect: 'follow'})
     return r.json()
 
+
 def get_media_paths(id, ext):
-    ri = requests.get(BASE_URL + "/api/item/thumbnail?id=" + id, {redirect: 'follow'})
+    ri = requests.get(BASE_URL + "/api/item/thumbnail?id=" +
+                      id, {redirect: 'follow'})
     full_path = urllib.parse.unquote(ri.json()['data'])
     head, tail = os.path.split(full_path)
     last_files = []
@@ -36,10 +41,11 @@ def get_media_paths(id, ext):
     raw_path = "static/full/{}.{}".format(id, ext)
     if not os.path.exists(thumbnail_path):
         os.symlink(full_path, thumbnail_path)
-        #Path(raw_path).unlink(missing_ok=True)
+        # Path(raw_path).unlink(missing_ok=True)
     if not os.path.exists(raw_path):
         os.symlink(raw_full_path, raw_path)
     return "/" + thumbnail_path, "/" + raw_path
+
 
 def get_folders_and_name(id=None, parents=[]):
     data = call_api("/api/library/info")
@@ -52,32 +58,37 @@ def get_folders_and_name(id=None, parents=[]):
         for x in parents:
             for s in core_data:
                 if s['id'] == x['id']:
-                    print("Core Data Set to{} with name {}".format(s['id'], s['name']))
+                    app.logger.debug(
+                        "Core Data Set to{} with name {}".format(s['id'], s['name']))
                     core_data = s['children']
                     break
         final_folders = []
         final_name = None
         actual_parents = {}
         for x in core_data:
-            print("Checking {} with name {}".format(x['id'], x['name']))
+            app.logger.debug(
+                "Checking {} with name {}".format(x['id'], x['name']))
             if x['children'] != []:
-                print("Found children for {}".format(x['id']))
+                app.logger.debug("Found children for {}".format(x['id']))
                 parents.append({'id': x['id'], 'name': x['name']})
-                final_folders, final_name, actual_parents = get_folders_and_name(id, parents)
+                final_folders, final_name, actual_parents = get_folders_and_name(
+                    id, parents)
                 if final_name is not None:
                     break
                 else:
                     parents.pop()
             if x['id'] == id:
-                print("Found id: {}".format(x['name']))
+                app.logger.debug("Found id: {}".format(x['name']))
                 final_name = x['name']
-                final_folders = [{'name': x['name'], 'id': x['id']} for x in x['children']]
+                final_folders = [{'name': x['name'], 'id': x['id']}
+                                 for x in x['children']]
                 actual_parents = parents
                 break
-        print("Final folders: {}".format(final_folders))
-        print("Final name: {}".format(final_name))
+        app.logger.debug("Final folders: {}".format(final_folders))
+        app.logger.debug("Final name: {}".format(final_name))
         return final_folders, final_name, actual_parents
-    
+
+
 def get_images(include=None, exclude=[]):
     cache_name = "static/cache/root"
     if include is not None:
@@ -85,25 +96,27 @@ def get_images(include=None, exclude=[]):
     if os.path.exists(cache_name):
         imf = json.loads(open(cache_name+"/meta.json", "r+").read())
         c = int(open(cache_name+"/counter", "r+").read())
-        return imf, c 
+        return imf, c
+
     api_addr = "/api/item/list?limit={}".format(LIST_LIMIT)
     if include is not None:
         api_addr += "&folders={}".format(include)
     data = call_api(api_addr)
     images = []
     c = 0
-    
+
     for x in data['data']:
-        print("Processing image {}".format(x['id']))
-        check = x['ext'] in ('jpg', 'png', 'gif') 
+        app.logger.debug("Checking Image {}".format(x['id']))
+        check = x['ext'] in ('jpg', 'png', 'gif')
         if include is None:
             check = check and x['folders'] == []
         elif exclude != []:
             for e in exclude:
                 check = check and e not in x['folders']
         if check:
-            images.append({'name': x['name'], 'id': x['id'], 'ext': x['ext'], 'count': c})
-            c+= 1
+            images.append(
+                {'name': x['name'], 'id': x['id'], 'ext': x['ext'], 'count': c})
+            c += 1
     os.makedirs(cache_name, exist_ok=True)
     with open(cache_name+"/meta.json", "w") as f:
         f.write(json.dumps(images))
@@ -111,11 +124,12 @@ def get_images(include=None, exclude=[]):
         f.write(str(c))
     return images, c
 
+
 def counter_calc(page, len):
     p = int(page)
     total = len
     if len == 0:
-        return  {'page': 0, 'min': 0, 'max': 0, 'total': 0}
+        return {'page': 0, 'min': 0, 'max': 0, 'total': 0}
     len = len // PAGE_LIMIT + 1
     if p > len:
         raise Exception("Page does not exist")
@@ -126,6 +140,7 @@ def counter_calc(page, len):
         max = min + PAGE_LIMIT
     return {'page': p, 'min': min, 'max': max, 'total': len}
 
+
 def generate_pagination_to_html_from_counter(counter, base=""):
     html = ""
     if counter['page'] == 0:
@@ -133,44 +148,56 @@ def generate_pagination_to_html_from_counter(counter, base=""):
     if counter['page'] == 1:
         html += "<li class=\"page-item disabled\"><a class=\"page-link\">Previous</a></li>"
     else:
-        html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">Previous</a></li>".format(b=base, c=counter['page'] - 1)
+        html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">Previous</a></li>".format(
+            b=base, c=counter['page'] - 1)
     if counter['page'] == 1:
         html += "<li class=\"page-item active\" aria-current=\"page\"><a class=\"page-link\">1</a></li>"
     elif counter['page'] == counter['total']:
-        html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(b=base, c=counter['total']-2)
+        html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(
+            b=base, c=counter['total']-2)
     else:
-        html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(b=base, c=counter['page']-1)
+        html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(
+            b=base, c=counter['page']-1)
     if counter['total'] >= 2:
         if counter['page'] == 1:
-            html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(b=base, c=counter['page']+1)
+            html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(
+                b=base, c=counter['page']+1)
         elif counter['page'] == counter['total'] and counter['total'] > 2:
-            html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(b=base, c=counter['page']-1)
+            html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(
+                b=base, c=counter['page']-1)
         else:
-            html += "<li class=\"page-item active\" aria-current=\"page\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(b=base, c=counter['page'])
+            html += "<li class=\"page-item active\" aria-current=\"page\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(
+                b=base, c=counter['page'])
         if counter['total'] >= 3:
             if counter['page'] == counter['total']:
-                html += "<li class=\"page-item active\" aria-current=\"page\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(b=base, c=counter['page'])
+                html += "<li class=\"page-item active\" aria-current=\"page\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(
+                    b=base, c=counter['page'])
             elif counter['page'] == 1:
-                html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(b=base, c=counter['page']+2)
+                html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(
+                    b=base, c=counter['page']+2)
             else:
-                html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(b=base, c=counter['page']+1)
+                html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">{c}</a></li>".format(
+                    b=base, c=counter['page']+1)
     if counter['page'] == counter['total']:
         html += "<li class=\"page-item disabled\"><a class=\"page-link\">Next</a></li>"
     else:
-        html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">Next</a></li>".format(b=base, c=counter['page'] + 1)
+        html += "<li class=\"page-item\"><a class=\"page-link\" href=\"{b}/page/{c}\">Next</a></li>".format(
+            b=base, c=counter['page'] + 1)
     return html
+
 
 @app.route('/resources')
 def resources():
     id = request.args.get('id')
     ext = request.args.get('ext')
     tp = request.args.get('type')
-    
+
     tn, fl = get_media_paths(id, ext)
     if tp == "thumbnail":
         return redirect(tn)
     elif tp == "full":
         return redirect(fl)
+
 
 @app.route('/folders/<id>/page/<p>', methods=['GET'])
 def list_items(id, p):
@@ -183,10 +210,12 @@ def list_items(id, p):
         images, len = get_images(id, exclude_ids)
         counter = counter_calc(p, len)
         limited_images = images[counter['min']:counter['max']]
-        pagination = generate_pagination_to_html_from_counter(counter, "/folders/{}".format(id))
+        pagination = generate_pagination_to_html_from_counter(
+            counter, "/folders/{}".format(id))
         return render_template('list_items.html', title=title, folders=folders, images=limited_images, counter=counter, pagination=pagination, parents=actual_parents)
     except Exception:
         return render_template('error.html', error=traceback.format_exc())
+
 
 @app.route('/page/<p>', methods=['GET'])
 def list_page(p):
@@ -199,6 +228,7 @@ def list_page(p):
         return render_template('list_items.html', folders=folders, images=limited_images, counter=counter, pagination=pagination)
     except Exception:
         return render_template('error.html', error=traceback.format_exc())
+
 
 @app.route('/', methods=['GET'])
 def show_main():
