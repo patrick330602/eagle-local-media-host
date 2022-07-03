@@ -236,5 +236,13 @@ def show_main():
     return redirect(url_for('list_page', p=1))
 
 
+@app.route('/clear', methods=['GET'])
+def clear_cache():
+    os.system("rm -rf static/cache")
+    os.system("rm -rf static/thumbnails")
+    os.system("rm -rf static/full")
+    return redirect(url_for('show_main'))
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=4674, debug=True)
