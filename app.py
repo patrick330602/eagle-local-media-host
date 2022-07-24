@@ -116,7 +116,7 @@ def get_images(include=None, exclude=[]):
                 check = check and e not in x['folders']
         if check:
             images.append(
-                {'name': x['name'], 'id': x['id'], 'ext': x['ext'], 'count': c})
+                {'name': x['name'], 'id': x['id'], 'ext': x['ext'], 'count': c % PAGE_LIMIT})
             c += 1
     os.makedirs(cache_name, exist_ok=True)
     with open(cache_name+"/meta.json", "w") as f:
