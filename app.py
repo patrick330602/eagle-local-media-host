@@ -2,6 +2,7 @@ import json
 import os
 import traceback
 import urllib
+from pathlib import Path
 
 import requests
 from flask import Flask, redirect, render_template, request, url_for
@@ -14,6 +15,7 @@ bootstrap = Bootstrap4(app)
 BASE_URL = "http://localhost:41595"
 LIST_LIMIT = 1000000
 PAGE_LIMIT = 20
+BASE_FOLDER = Path(__file__).parent.absolute()
 
 
 def call_api(params):
@@ -35,22 +37,24 @@ def get_media_paths(id, ext):
     if len(last_files) == 0:
         last_files.append(tail)
     raw_full_path = os.path.join(head, last_files[-1])
-    os.makedirs('static/thumbnails/', exist_ok=True)
-    os.makedirs('static/full/', exist_ok=True)
+    os.makedirs(os.path.join(BASE_FOLDER, 'static/thumbnails/'), exist_ok=True)
+    os.makedirs(os.path.join(BASE_FOLDER, 'static/full/'), exist_ok=True)
     thumbnail_path = "static/thumbnails/{}.png".format(id)
+    long_thumbnail_path = os.path.join(BASE_FOLDER, thumbnail_path)
     raw_path = "static/full/{}.{}".format(id, ext)
-    if not os.path.exists(thumbnail_path):
-        os.symlink(full_path, thumbnail_path)
+    long_raw_path = os.path.join(BASE_FOLDER, raw_path)
+    if not os.path.exists(long_thumbnail_path):
+        os.symlink(full_path, long_thumbnail_path)
         # Path(raw_path).unlink(missing_ok=True)
-    if not os.path.exists(raw_path):
-        os.symlink(raw_full_path, raw_path)
+    if not os.path.exists(long_raw_path):
+        os.symlink(raw_full_path, long_raw_path)
     return "/" + thumbnail_path, "/" + raw_path
 
 
 def get_folders_and_name(id=None, parents=[]):
     data = call_api("/api/library/info")
-    os.makedirs('static/cache/', exist_ok=True)
-    with open("static/cache/folders.json", "w") as f:
+    os.makedirs(os.path.join(BASE_FOLDER, 'static/cache/'), exist_ok=True)
+    with open(os.path.join(BASE_FOLDER, "static/cache/folders.json"), "w") as f:
         f.write(json.dumps(data['data']))
     if id is None:
         return [{'name': x['name'], 'id': x['id']} for x in data['data']['folders']], None
@@ -91,9 +95,9 @@ def get_folders_and_name(id=None, parents=[]):
 
 
 def get_images(include=None, exclude=[]):
-    cache_name = "static/cache/root"
+    cache_name = os.path.join(BASE_FOLDER, "static/cache/root")
     if include is not None:
-        cache_name = "static/cache/" + include
+        cache_name = os.path.join(BASE_FOLDER, "static/cache/" + include)
     if os.path.exists(cache_name):
         imf = json.loads(open(cache_name+"/meta.json", "r+").read())
         c = int(open(cache_name+"/counter", "r+").read())
