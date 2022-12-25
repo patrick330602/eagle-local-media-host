@@ -1,3 +1,6 @@
 __pycache__
 env
 static/**/
+static/files
+static/full_definition.json
+thunder-tests

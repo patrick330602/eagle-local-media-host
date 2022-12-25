@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+{% block head %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% block styles %}
+{{ bootstrap.load_css() }}
+<link rel="stylesheet" href="/static/style.css">
+{% endblock %}
+{% if title %}
+<title>Home
+  {% for item in parents %}
+  / {{ item.name }}
+  {% endfor %}
+  {% if title %}
+  / {{title}}
+  {% endif %}
+  - Eagle.cool Server</title>
+{% else %}
+<title>Eagle.cool Server</title>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Eagle.cool Server</h1>
+
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      {% for item in parents %}
+      <li class="breadcrumb-item"><a href="/folders/{{ item.id }}/page/1">{{ item.name }}</a></li>
+      {% endfor %}
+      {% if title %}
+      <li class="breadcrumb-item active" aria-current="page">{{title}}</li>
+      {% endif %}
+    </ol>
+  </nav>
+
+
+  <div class="row row-cols-4 folders">
+    {% for item in folders %}
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="folder border">
+        <a href="/folders/{{ item.id }}/page/1">
+          <img class="icon" src="/static/folder.png" alt="{{item.name}}"><span>{{ item.name }}</span>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+      {{ pagination|safe }}
+    </ul>
+  </nav>
+
+
+  <div class="row row-cols-4 photos" id="gallery" data-toggle="modal" data-target="#MainModal">
+    {% for i in images %}
+    <div class="col-12 col-sm-6 col-lg-3 item">
+      <img class="border w-100" src="/static/files/{{i.thumb}}" alt="{{i.name}}" data-target="#image-full"
+        data-slide-to="{{i.count}}">
+    </div>
+    {% endfor %}
+  </div>
+
+
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+      {{ pagination|safe }}
+    </ul>
+  </nav>
+
+
+  <div class="modal fade" id="MainModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="image-full" class="carousel slide" data-ride="carousel" data-interval="false">
+            <div class="carousel-inner">
+              {% for i in images %}
+              {% if i.count == 0 %}
+              <div class="carousel-item active">
+              {% else %}
+              <div class="carousel-item">
+              {% endif %}
+                <img class="d-block w-100" src="/static/files/{{i.file}}" alt="{{i.name}}">
+              </div>
+              {% endfor %}
+            </div>
+            <a class="carousel-control-prev" href="#image-full" role="button" data-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#image-full" role="button" data-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="sr-only">Next</span>
+            </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endblock %}
+  {% block scripts %}
+  {{ bootstrap.load_js() }}
+  {% endblock %}
+
+</html>
